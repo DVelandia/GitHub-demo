@@ -3,7 +3,7 @@
 
 import { searchRepos, getRepoTopics } from './api.js';
 import { initModal, openModal, closeModal, buildRepoModalContent } from './modal.js';
-import { setStatus, clearCards, renderCards, updatePagination, onCardsClick, onPrev, onNext } from './render.js';
+import { setStatus, clearCards, renderCards, updatePagination, onCardsClick, onPrev, onNext, renderSkeleton } from './render.js';
 
 const DEFAULT_QUERY = 'stars:>10000';
 const PER_PAGE = 10;
@@ -25,20 +25,26 @@ init();
 
 function init() {
   initModal();
-  hydrateFromSession();
+  hydrateFromUrlOrSession();
   bindUI();
   applySavedTheme();
   // Primera carga
   void load();
 }
 
-function hydrateFromSession() {
-  const q = sessionStorage.getItem(SS_KEYS.q);
-  const page = Number(sessionStorage.getItem(SS_KEYS.page) || '1');
-  state.query = (q && q.trim()) ? q : DEFAULT_QUERY;
-  state.page = Number.isFinite(page) && page > 0 ? page : 1;
-
-  // Reflejar en input (si es default no ensuciar)
+function hydrateFromUrlOrSession() {
+  const url = new URL(location.href);
+  const urlQ = url.searchParams.get('q');
+  const urlPage = Number(url.searchParams.get('page') || '1');
+  if (urlQ || urlPage) {
+    state.query = (urlQ && urlQ.trim()) ? urlQ : DEFAULT_QUERY;
+    state.page = Number.isFinite(urlPage) && urlPage > 0 ? urlPage : 1;
+  } else {
+    const ssQ = sessionStorage.getItem(SS_KEYS.q);
+    const ssPage = Number(sessionStorage.getItem(SS_KEYS.page) || '1');
+    state.query = (ssQ && ssQ.trim()) ? ssQ : DEFAULT_QUERY;
+    state.page = Number.isFinite(ssPage) && ssPage > 0 ? ssPage : 1;
+  }
   $q.value = (state.query === DEFAULT_QUERY) ? '' : state.query;
 }
 
@@ -90,14 +96,27 @@ function bindUI() {
 
   // Tema
   $theme.addEventListener('click', toggleTheme);
+
+  // Soporte de navegación con historial
+  window.addEventListener('popstate', () => {
+    const url = new URL(location.href);
+    const q = url.searchParams.get('q');
+    const page = Number(url.searchParams.get('page') || '1');
+    state.query = (q && q.trim()) ? q : DEFAULT_QUERY;
+    state.page = Number.isFinite(page) && page > 0 ? page : 1;
+    $q.value = (state.query === DEFAULT_QUERY) ? '' : state.query;
+    void load({ pushHistory: false });
+  });
 }
 
-async function load() {
+async function load({ pushHistory = true } = {}) {
   if (state.loading) return;
   state.loading = true;
 
   setStatus('Cargando…', { busy: true });
   clearCards();
+  // Skeleton simple
+  renderSkeleton(10);
 
   try {
     const data = await searchRepos(state.query, state.page, PER_PAGE);
@@ -117,6 +136,18 @@ async function load() {
     // Persistir
     sessionStorage.setItem(SS_KEYS.q, state.query);
     sessionStorage.setItem(SS_KEYS.page, String(state.page));
+
+    // Sincronizar URL
+    if (pushHistory) {
+      const url = new URL(location.href);
+      if (state.query && state.query !== DEFAULT_QUERY) {
+        url.searchParams.set('q', state.query);
+      } else {
+        url.searchParams.delete('q');
+      }
+      url.searchParams.set('page', String(state.page));
+      history.pushState({}, '', url);
+    }
   } catch (err) {
     const msg = String(err?.message || 'Error inesperado');
     if (msg === 'RATE_LIMIT') {

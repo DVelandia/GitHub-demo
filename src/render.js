@@ -57,6 +57,23 @@ export function updatePagination(page, totalPages) {
   nextBtn.disabled = page >= totalPages;
 }
 
+export function renderSkeleton(count = 10) {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < count; i += 1) {
+    const sk = document.createElement('div');
+    sk.className = 'card skeleton';
+    sk.innerHTML = `
+      <div class="sk sk-title"></div>
+      <div class="sk sk-sub"></div>
+      <div class="sk sk-meta"></div>
+      <div class="sk sk-desc"></div>
+    `;
+    frag.appendChild(sk);
+  }
+  cardsEl.innerHTML = '';
+  cardsEl.appendChild(frag);
+}
+
 export function onCardsClick(handler) {
   cardsEl.addEventListener('click', (ev) => {
     const card = ev.target.closest('.card');
