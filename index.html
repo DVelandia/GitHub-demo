@@ -1,0 +1,62 @@
+<!-- index.html -->
+<!-- /index.html -->
+<!doctype html>
+<html lang="es" data-theme="auto">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GitHub Repos · Demo</title>
+    <meta name="description" content="Listado de repositorios de GitHub con tarjetas, búsqueda y modal accesible." />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body class="app">
+    <header class="header">
+      <h1 class="header__title">Explora repos populares de GitHub</h1>
+
+      <div class="header__controls">
+        <form class="search" role="search" aria-label="Buscar repositorios">
+          <label class="search__label" for="q">Búsqueda</label>
+          <input id="q" name="q" class="search__input" type="search" placeholder="Buscar por nombre, descripción, etc." autocomplete="off" />
+          <button class="search__clear" type="button" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">✕</button>
+        </form>
+
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" title="Cambiar tema claro/oscuro">
+          🌓
+          <span class="visually-hidden">Cambiar tema</span>
+        </button>
+      </div>
+
+      <p id="status" class="status" aria-live="polite"></p>
+    </header>
+
+    <main class="main">
+      <section class="grid" id="cards" aria-label="Resultados"></section>
+
+      <nav class="pagination" aria-label="Paginación de resultados">
+        <button id="prev" class="pagination__btn" type="button" disabled>Anterior</button>
+        <span id="page-indicator" class="pagination__indicator" aria-live="polite">—</span>
+        <button id="next" class="pagination__btn" type="button" disabled>Siguiente</button>
+      </nav>
+    </main>
+
+    <!-- Modal accesible -->
+    <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
+      <div class="modal__overlay" data-close="true"></div>
+      <div class="modal__dialog" role="document">
+        <header class="modal__header">
+          <h2 id="modal-title" class="modal__title">Detalles</h2>
+          <button class="modal__close" type="button" aria-label="Cerrar">✕</button>
+        </header>
+        <div id="modal-content" class="modal__content">
+          <!-- Contenido inyectado -->
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <small>Fuente: <a href="https://docs.github.com/rest/search/search?apiVersion=2022-11-28#search-repositories" rel="noopener noreferrer" target="_blank">GitHub REST API v3</a></small>
+    </footer>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
